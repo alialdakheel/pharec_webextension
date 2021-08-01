@@ -5,23 +5,21 @@
 
   "description": "Detect phishing pages.",
   "homepage_url": "https://github.com/alialdakheel/pharec_webextension",
-  "permissions": [ "activeTab", "tabs", "<all_urls>" ],
+  "permissions": [ "activeTab", "<all_urls>" ],
+  "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
 
   "icons": {
     "48": "icons/pharec-48.png",
     "96": "icons/pharec-96.png"
   },
 
+  "web_accessible_resources": [
+    "js_model/*"
+  ],
+
   "browser_action": {
     "default_icon": "icons/pharec-32.png",
     "default_title": "Pharec",
     "default_popup": "popup/pharec-ui.html"
-  },
-
-  "content_scripts": [
-    {
-      "matches": ["http://*/*", "https://*/*"],
-      "js": ["metadata.js"]
-    }
-  ]
+  }
 }

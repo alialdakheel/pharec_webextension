@@ -7,6 +7,76 @@ const hidePage = `body > :not(.h1-pharec) {
                     display: none;
                   }`;
 
+
+function onCapture(imageUri) {
+  var image_elem = document.createElement("img");
+  image_elem.src = imageUri;
+  image_elem.setAttribute("width", 512);
+  image_elem.setAttribute("height", 256);
+  image_elem.style.maxWidth = "100%";
+  image_elem.style.maxHeight = "100vw";
+  image_elem.addEventListener("click", (e) => {
+	  e.target.style.maxHeight = e.target.style.maxHeight === "100%" ? "100vw" : "100%";
+  });
+  image_elem.alt = "captureVisibleTab image";
+
+  var parag_elem = document.createElement("p");
+  var t = document.createTextNode("Screenshot");
+  parag_elem.className = "p-pharec";
+  parag_elem.appendChild(t);
+
+  document.body.appendChild(parag_elem);
+  document.body.appendChild(image_elem);
+
+  loadImageTensor(imageUri).then( (image_tensor) => {
+	  runModel(rescale(image_tensor)).then(output => {
+	    var pred = tf.squeeze(tf.round(tf.sigmoid(output)), [0, 1]).arraySync();
+	    var is_phishing = !Boolean(pred);
+
+            var is_phi_elem = document.createElement("p");
+            var t = document.createTextNode("Is Phishing? " + is_phishing);
+            is_phi_elem.className = "p-pharec";
+            is_phi_elem.appendChild(t);
+            document.body.appendChild(is_phi_elem);
+
+            var parag_elem = document.createElement("p");
+            var t = document.createTextNode("Output (logit): " + tf.squeeze(output, [0, 1]).arraySync());
+            parag_elem.className = "p-pharec";
+            parag_elem.appendChild(t);
+            document.body.appendChild(parag_elem);
+	  });
+  });
+  
+}
+
+function onCaptureError(error) {
+  console.log(`Error: ${error}`);
+}
+
+function loadImageTensor(imageUri) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.src = imageUri;
+    img.setAttribute("width", 512);
+    img.setAttribute("height", 256);
+    img.onload = () => resolve(tf.browser.fromPixels(img));
+    img.onerror = (err) => reject(err);
+  });
+}
+
+function rescale(image_tensor) {
+	return image_tensor.toFloat().div(tf.scalar(255));
+}
+
+async function runModel(image_tensor) {
+  var model_url = browser.runtime.getURL("js_model/model.json")
+  const model = await tf.loadLayersModel(model_url);
+  var expanded_tensor = await tf.expandDims(image_tensor, 0);
+  var model_output = await model.predict(expanded_tensor);
+
+  return model_output;
+}
+
 /**
  * Listen for clicks on the buttons, and send the appropriate message to
  * the content script in the page.
@@ -15,40 +85,31 @@ function listenForClicks() {
   document.addEventListener("click", (e) => {
 
     /**
-     * Insert the page-hiding CSS into the active tab,
-     * then get the beast URL and
-     * send a "beastify" message to the content script in the active tab.
+     * Run capture then process the image
      */
-    function Run(tabs) {
-      browser.tabs.insertCSS({code: hidePage}).then(() => {
-        browser.tabs.sendMessage(tabs[0].id, {
-          command: "run",
-          //beastURL: url
-        });
-	console.log(tabs[0])
-        console.log('sent run, now capture...');
-        function onCapture(imageUri) {
-        console.log(imageUri);
-        }
-        
-        function onCaptureError(error) {
-          console.log(`Error: ${error}`);
-        }
-	var capturing = browser.tabs.captureVisibleTab();
-        capturing.then(onCapture, onCaptureError);
-      });
+    function runCapture(tabs) {
+
+      var capturing = browser.tabs.captureVisibleTab();
+      capturing.then(onCapture, onCaptureError);
+
+      /*
+       *browser.tabs.insertCSS({code: hidePage}).then(() => {
+       *  browser.tabs.sendMessage(tabs[0].id, {
+       *    command: "run",
+       *    //beastURL: url
+       *  });
+       *});
+       */
     }
 
-    /**
-     * Remove the page-hiding CSS from the active tab,
-     * send a "reset" message to the content script in the active tab.
-     */
     function reset(tabs) {
-      browser.tabs.removeCSS({code: hidePage}).then(() => {
-        browser.tabs.sendMessage(tabs[0].id, {
-          command: "reset",
-        });
-      });
+      /*
+       *browser.tabs.removeCSS({code: hidePage}).then(() => {
+       *  browser.tabs.sendMessage(tabs[0].id, {
+       *    command: "reset",
+       *  });
+       *});
+       */
     }
 
     /**
@@ -60,11 +121,11 @@ function listenForClicks() {
 
     /**
      * Get the active tab,
-     * then call "beastify()" or "reset()" as appropriate.
+     * then call "run()" or "reset()" as appropriate.
      */
-    if (e.target.classList.contains("run")) {
+    if (e.target.classList.contains("runCapture")) {
       browser.tabs.query({active: true, currentWindow: true})
-        .then(Run)
+	.then(runCapture)
         .catch(reportError);
 
     }
@@ -83,7 +144,7 @@ function listenForClicks() {
 function reportExecuteScriptError(error) {
   document.querySelector("#popup-content").classList.add("hidden");
   document.querySelector("#error-content").classList.remove("hidden");
-  console.error(`Failed to execute Run content script: ${error.message}`);
+  console.error(`Failed to execute run content script: ${error.message}`);
 }
 
 /**
@@ -91,7 +152,8 @@ function reportExecuteScriptError(error) {
  * and add a click handler.
  * If we couldn't inject the script, handle the error.
  */
-browser.tabs.executeScript({file: "/content_scripts/run_contentscript.js"})
-.then(listenForClicks)
-.catch(reportExecuteScriptError);
+//browser.tabs.executeScript({file: "/content_scripts/run_contentscript.js"})
+//.then(listenForClicks)
+//.catch(reportExecuteScriptError);
+listenForClicks()
 

@@ -1,5 +1,7 @@
 html, body {
-  width: 100px;
+  width: 400px;
+  aspect-ratio: 1/2;
+  overflow: hidden;
 }
 
 .hidden {
@@ -7,25 +9,39 @@ html, body {
 }
 
 .button {
-  margin: 3% auto;
-  padding: 4px;
+  /*margin: 3% auto;*/
+  margin-right: 18%;
+  margin-left: 18%;
+  margin-bottom: 3%;
+  padding: 20px;
   text-align: center;
   font-size: 1.5em;
   cursor: pointer;
+  border-radius: 5px;
 }
 
-.run:hover {
-  background-color: #CFF2F2;
+
+.runCapture {
+  color: white;
+  background-color: #23537E;
 }
 
-.run {
-  background-color: #E5F2F2;
+.runCapture:hover {
+  color: white;
+  background-color: #333353;
 }
 
 .reset {
-  background-color: #FBFBC9;
+  background-color: #BBCBEE;
 }
 
 .reset:hover {
-  background-color: #EAEA9D;
+  background-color: #4B5B6E;
+  /*background-color: #AA5A7D;*/
+}
+
+.p-pharec {
+  text-align: center;
+  margin: 3% auto;
+  font-size: 0.8em;
 }

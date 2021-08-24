@@ -28,23 +28,27 @@ function onCapture(imageUri) {
   document.body.appendChild(parag_elem);
   document.body.appendChild(image_elem);
 
-  loadImageTensor(imageUri).then( (image_tensor) => {
-	  runModel(rescale(image_tensor)).then(output => {
-	    var pred = tf.squeeze(tf.round(tf.sigmoid(output)), [0, 1]).arraySync();
-	    var is_phishing = !Boolean(pred);
+  tf.ready().then(() => {
+    tf.tidy(() => {
+      loadImageTensor(imageUri).then((image_tensor) => {
+        runModel(rescale(image_tensor)).then(output => {
+          var pred = tf.squeeze(tf.round(tf.sigmoid(output)), [0, 1]).arraySync();
+          var is_phishing = !Boolean(pred);
 
-            var is_phi_elem = document.createElement("p");
-            var t = document.createTextNode("Is Phishing? " + is_phishing);
-            is_phi_elem.className = "p-pharec";
-            is_phi_elem.appendChild(t);
-            document.body.appendChild(is_phi_elem);
+                var is_phi_elem = document.createElement("p");
+                var t = document.createTextNode("Is Phishing? " + is_phishing);
+                is_phi_elem.className = "p-pharec";
+                is_phi_elem.appendChild(t);
+                document.body.appendChild(is_phi_elem);
 
-            var parag_elem = document.createElement("p");
-            var t = document.createTextNode("Output (logit): " + tf.squeeze(output, [0, 1]).arraySync());
-            parag_elem.className = "p-pharec";
-            parag_elem.appendChild(t);
-            document.body.appendChild(parag_elem);
-	  });
+                var parag_elem = document.createElement("p");
+                var t = document.createTextNode("Output (logit): " + tf.squeeze(output, [0, 1]).arraySync());
+                parag_elem.className = "p-pharec";
+                parag_elem.appendChild(t);
+                document.body.appendChild(parag_elem);
+        });
+      });
+    });
   });
   
 }

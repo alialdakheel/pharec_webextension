@@ -9,24 +9,11 @@ const hidePage = `body > :not(.h1-pharec) {
 
 
 function onCapture(imageUri) {
-  var image_elem = document.createElement("img");
+  var image_elem = document.getElementById("imgCapture");
   image_elem.src = imageUri;
-  image_elem.setAttribute("width", 512);
-  image_elem.setAttribute("height", 256);
-  image_elem.style.maxWidth = "100%";
-  image_elem.style.maxHeight = "100vw";
   image_elem.addEventListener("click", (e) => {
 	  e.target.style.maxHeight = e.target.style.maxHeight === "100%" ? "100vw" : "100%";
   });
-  image_elem.alt = "captureVisibleTab image";
-
-  var parag_elem = document.createElement("p");
-  var t = document.createTextNode("Screenshot");
-  parag_elem.className = "p-pharec";
-  parag_elem.appendChild(t);
-
-  document.body.appendChild(parag_elem);
-  document.body.appendChild(image_elem);
 
   tf.ready().then(() => {
     tf.tidy(() => {
@@ -35,17 +22,12 @@ function onCapture(imageUri) {
           var pred = tf.squeeze(tf.round(tf.sigmoid(output)), [0, 1]).arraySync();
           var is_phishing = !Boolean(pred);
 
-                var is_phi_elem = document.createElement("p");
-                var t = document.createTextNode("Is Phishing? " + is_phishing);
-                is_phi_elem.className = "p-pharec";
-                is_phi_elem.appendChild(t);
-                document.body.appendChild(is_phi_elem);
+          var pred_elem = document.getElementById("pred-output");
+          pred_elem.innerHTML = "Is Phishing? " + is_phishing;
 
-                var parag_elem = document.createElement("p");
-                var t = document.createTextNode("Output (logit): " + tf.squeeze(output, [0, 1]).arraySync());
-                parag_elem.className = "p-pharec";
-                parag_elem.appendChild(t);
-                document.body.appendChild(parag_elem);
+          var logit_elem = document.getElementById("logit-output");
+          logit_elem.innerHTML = "Output (logit): " + tf.squeeze(output, [0, 1]).arraySync();
+
         });
       });
     });

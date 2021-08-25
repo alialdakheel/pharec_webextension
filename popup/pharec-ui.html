@@ -8,8 +8,21 @@
 
   <body>
     <div id="popup-content">
+      <div id="capturedImg" class="captured-img">
+        <img id="imgCapture" src="../icons/pharec-96.png" alt="Captured page">
+      </div>
+      <div id="pred" class="pharec-pred">
+        <p id="pred-output" class="p-pharec">
+        Is Phishing? ...
+        </p>
+        <p id="logit-output" class="p-pharec">
+        Logit: ...
+        </p>
+      </div>
+      <footer>
       <div class="button runCapture">Capture</div>
-      <div class="button reset">Reset</div>
+      </footer>
+      <!--<div class="button reset">Reset</div>-->
     </div>
     <div id="error-content" class="hidden">
       <p>Can't run model on this web page.</p><p>Try a different page.</p>

@@ -1,7 +1,7 @@
 html, body {
   width: 400px;
   aspect-ratio: 1/2;
-  overflow: hidden;
+  scrollbar-width: none;
 }
 
 
@@ -12,7 +12,7 @@ html, body {
 .p-pharec {
   text-align: center;
   margin: 3% auto;
-  font-size: 0.9em;
+  font-size: 1.3em;
 }
 
 .captured-img {

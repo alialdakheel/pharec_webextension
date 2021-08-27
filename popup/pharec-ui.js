@@ -7,60 +7,18 @@ const hidePage = `body > :not(.h1-pharec) {
                     display: none;
                   }`;
 
-
 function onCapture(imageUri) {
   var image_elem = document.getElementById("imgCapture");
   image_elem.src = imageUri;
   image_elem.addEventListener("click", (e) => {
 	  e.target.style.maxHeight = e.target.style.maxHeight === "100%" ? "100vw" : "100%";
   });
-
-  tf.ready().then(() => {
-    tf.tidy(() => {
-      loadImageTensor(imageUri).then((image_tensor) => {
-        runModel(rescale(image_tensor)).then(output => {
-          var pred = tf.squeeze(tf.round(tf.sigmoid(output)), [0, 1]).arraySync();
-          var is_phishing = !Boolean(pred);
-
-          var pred_elem = document.getElementById("pred-output");
-          pred_elem.innerHTML = "Is Phishing? " + is_phishing;
-
-          var logit_elem = document.getElementById("logit-output");
-          logit_elem.innerHTML = "Output (logit): " + tf.squeeze(output, [0, 1]).arraySync();
-
-        });
-      });
-    });
-  });
-  
+  var bg = browser.extension.getBackgroundPage();
+  bg.analyzeImage(imageUri);
 }
 
 function onCaptureError(error) {
   console.log(`Error: ${error}`);
-}
-
-function loadImageTensor(imageUri) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.src = imageUri;
-    img.setAttribute("width", 512);
-    img.setAttribute("height", 256);
-    img.onload = () => resolve(tf.browser.fromPixels(img));
-    img.onerror = (err) => reject(err);
-  });
-}
-
-function rescale(image_tensor) {
-	return image_tensor.toFloat().div(tf.scalar(255));
-}
-
-async function runModel(image_tensor) {
-  var model_url = browser.runtime.getURL("js_model/model.json")
-  const model = await tf.loadLayersModel(model_url);
-  var expanded_tensor = await tf.expandDims(image_tensor, 0);
-  var model_output = await model.predict(expanded_tensor);
-
-  return model_output;
 }
 
 /**

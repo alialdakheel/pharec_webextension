@@ -7,14 +7,38 @@ const hidePage = `body > :not(.h1-pharec) {
                     display: none;
                   }`;
 
+function listenForBackground(){
+  browser.runtime.onMessage.addListener(
+    (msg, sender) => {
+      if (msg.type == "imgCapture") {
+        var image_elem = document.getElementById("imgCapture");
+        image_elem.src = msg.data.imageURI;
+      } else if (msg.type == "Result") {
+        var pred_elem = document.getElementById("pred-output");
+        pred_elem.innerHTML = "Is Phishing? " + msg.data.isPhish;
+
+        var logit_elem = document.getElementById("logit-output");
+        logit_elem.innerHTML = "Output (logit): " + msg.data.modelLogit;
+      } else {}
+    });
+}
+
 function onCapture(imageUri) {
   var image_elem = document.getElementById("imgCapture");
   image_elem.src = imageUri;
-  image_elem.addEventListener("click", (e) => {
-	  e.target.style.maxHeight = e.target.style.maxHeight === "100%" ? "100vw" : "100%";
-  });
+  /*
+   *image_elem.addEventListener("click", (e) => {
+	 *  e.target.style.maxHeight = e.target.style.maxHeight === "100%" ? "100vw" : "100%";
+   *});
+   */
   var bg = browser.extension.getBackgroundPage();
-  bg.analyzeImage(imageUri);
+  bg.analyzeImage(imageUri).then((res) => {
+    var pred_elem = document.getElementById("pred-output");
+    pred_elem.innerHTML = "Is Phishing? " + res.isPhish;
+
+    var logit_elem = document.getElementById("logit-output");
+    logit_elem.innerHTML = "Output (logit): " + res.modelLogit;
+  });
 }
 
 function onCaptureError(error) {
@@ -99,5 +123,16 @@ function reportExecuteScriptError(error) {
 //browser.tabs.executeScript({file: "/content_scripts/run_contentscript.js"})
 //.then(listenForClicks)
 //.catch(reportExecuteScriptError);
-listenForClicks()
+listenForBackground();
+listenForClicks();
+browser.runtime.sendMessage({type: "getResults"}).then((response) => {
+        var image_elem = document.getElementById("imgCapture");
+        image_elem.src = response.data.imageURI;
 
+        var pred_elem = document.getElementById("pred-output");
+        pred_elem.innerHTML = "Is Phishing? " + response.data.isPhish;
+
+        var logit_elem = document.getElementById("logit-output");
+        logit_elem.innerHTML = "Output (logit): " + response.data.modelLogit;
+});
+  

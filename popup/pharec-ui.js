@@ -17,8 +17,8 @@ function listenForBackground(){
         var pred_elem = document.getElementById("pred-output");
         pred_elem.innerHTML = "Is Phishing? " + msg.data.isPhish;
 
-        var logit_elem = document.getElementById("logit-output");
-        logit_elem.innerHTML = "Output (logit): " + msg.data.modelLogit;
+        var model_elem = document.getElementById("model-output");
+        model_elem.innerHTML = "Probability: " + (msg.data.modelOutput * 100).toFixed(2) + " %";
       } else {}
     });
 }
@@ -36,8 +36,8 @@ function onCapture(imageUri) {
     var pred_elem = document.getElementById("pred-output");
     pred_elem.innerHTML = "Is Phishing? " + res.isPhish;
 
-    var logit_elem = document.getElementById("logit-output");
-    logit_elem.innerHTML = "Output (logit): " + res.modelLogit;
+    var model_elem = document.getElementById("model-output");
+    model_elem.innerHTML = "Probability: " + (res.modelOutput * 100).toFixed(2) + " %";
   });
 }
 
@@ -132,7 +132,7 @@ browser.runtime.sendMessage({type: "getResults"}).then((response) => {
         var pred_elem = document.getElementById("pred-output");
         pred_elem.innerHTML = "Is Phishing? " + response.data.isPhish;
 
-        var logit_elem = document.getElementById("logit-output");
-        logit_elem.innerHTML = "Output (logit): " + response.data.modelLogit;
+        var model_elem = document.getElementById("model-output");
+        model_elem.innerHTML = "Probability: " + (response.data.modelOutput * 100).toFixed(2) + " %";
 });
   

@@ -1,4 +1,3 @@
-
 /*
  *Consider when to run the script [ tabs.onUpdate, webNavigation.onCompleted, webNavigation.onHistoryStateUpdated]
  */
@@ -52,16 +51,15 @@ function analyzeImage(imageUri) {
           model = result[0];
           image_tensor = result[1];
           runModel(model, rescale(image_tensor)).then(output => {
-            var pred = tf.squeeze(tf.round(tf.sigmoid(output)), [0, 1]).arraySync();
+            var logit = tf.squeeze(output, [0, 1]);
+            var sigmoid_output = tf.sigmoid(logit);
+            var model_output = sigmoid_output.arraySync();
+            var pred = tf.round(sigmoid_output).arraySync();
             var is_phishing = !Boolean(pred);
-            var logit = tf.squeeze(output, [0, 1]).arraySync();
-
-            //console.log("Is Phishing? " + is_phishing);
-            //console.log("Output (logit): " + logit);
 
             results.isPhish = is_phishing;
-            results.modelLogit = logit;
-            resolve({isPhish: is_phishing, modelLogit: logit});
+            results.modelOutput = model_output;
+            resolve({isPhish: is_phishing, modelOutput: model_output});
           });
         });
       });

@@ -7,7 +7,8 @@ const filter = {
 }
 var results = {}
 
-var model;
+var vmodel;
+var nlpmodel;
 
 function loadImageTensor(imageUri) {
   return new Promise((resolve, reject) => {
@@ -20,24 +21,53 @@ function loadImageTensor(imageUri) {
   });
 }
 
+function loadURLTensor(URL) {
+  return new Promise((resolve, reject) => {
+    console.log(URL);
+    var url_split = URL.split('')
+    if (url_split[4] == 's')
+      var the_s = url_split.splice(4, 1);
+    var unicode_url =  url_split.map(c => c.charCodeAt());
+    console.log("Unicode:", unicode_url);
+    resolve(unicode_url);
+  });
+}
+
 function rescale(image_tensor) {
 	return image_tensor.toFloat().div(tf.scalar(255));
 }
 
-async function loadModel() {
-  if (model) {
-    return Promise.resolve(model);
+async function loadvModel() {
+  if (vmodel) {
+    return Promise.resolve(vmodel);
   } else {
-  var model_url = browser.runtime.getURL("js_model/model.json");
-  return tf.loadLayersModel(model_url);
+  var vmodel_url = browser.runtime.getURL("js_vmodel/model.json");
+  return tf.loadLayersModel(vmodel_url);
   }
 }
 
-async function runModel(model, image_tensor) {
-  var expanded_tensor = await tf.expandDims(image_tensor, 0);
-  var model_output = await model.predict(expanded_tensor);
+async function loadnlpModel() {
+  if (nlpmodel) {
+    return Promise.resolve(nlpmodel);
+  } else {
+  var nlpmodel_url = browser.runtime.getURL("js_nlpmodel/model.json");
+  return tf.loadLayersModel(nlpmodel_url);
+  }
+}
 
-  return model_output;
+async function runvModel(vmodel, image_tensor) {
+  var expanded_tensor = await tf.expandDims(image_tensor, 0);
+  var vmodel_output = await vmodel.predict(expanded_tensor);
+
+  return vmodel_output;
+}
+
+async function runnlpModel(nlpmodel, url_tensor) {
+  console.log('url_tensor', url_tensor);
+  var expanded_tensor = await tf.expandDims(url_tensor, 0);
+  var nlpmodel_output = await nlpmodel.predict(expanded_tensor);
+
+  return nlpmodel_output;
 }
 
 function analyzeImage(imageUri) {
@@ -45,21 +75,52 @@ function analyzeImage(imageUri) {
     tf.ready().then(() => {
       tf.tidy(() => {
         Promise.all([
-          loadModel(),
+          loadvModel(),
           loadImageTensor(imageUri)
         ]).then((result) => {
-          model = result[0];
+          vmodel = result[0];
           image_tensor = result[1];
-          runModel(model, rescale(image_tensor)).then(output => {
+          runvModel(vmodel, rescale(image_tensor)).then(output => {
             var logit = tf.squeeze(output, [0, 1]);
             var sigmoid_output = tf.sigmoid(logit);
-            var model_output = sigmoid_output.arraySync();
+            var vmodel_output = sigmoid_output.arraySync();
             var pred = tf.round(sigmoid_output).arraySync();
             var is_phishing = !Boolean(pred);
 
             results.isPhish = is_phishing;
-            results.modelOutput = model_output;
-            resolve({isPhish: is_phishing, modelOutput: model_output});
+            results.vmodelOutput = vmodel_output;
+            resolve({isPhish: is_phishing, vmodelOutput: vmodel_output});
+          });
+        });
+      });
+    });
+  });
+}
+
+function analyzeURL(URL) {
+  return new Promise((resolve, reject) => {
+    tf.ready().then(() => {
+      tf.tidy(() => {
+        Promise.all([
+          loadnlpModel(),
+          loadURLTensor(URL)
+        ]).then((result) => {
+          nlpmodel = result[0];
+          url_tensor = result[1];
+          runnlpModel(nlpmodel, url_tensor).then(output => {
+            console.log("output:", output);
+            console.log("output:", output.arraySync());
+            var logit = tf.squeeze(output, [0, 1]);
+            var sigmoid_output = tf.sigmoid(logit);
+            var nlpmodel_output = sigmoid_output.arraySync();
+            console.log("nlp output:", nlpmodel_output);
+            var pred = tf.round(sigmoid_output).arraySync();
+            var is_phishing = Boolean(pred);
+            console.log("is_phish:", is_phishing);
+
+            results.isPhish = is_phishing;
+            results.nlpmodelOutput = nlpmodel_output;
+            resolve({isPhish: is_phishing, nlpmodelOutput: nlpmodel_output});
           });
         });
       });
@@ -82,11 +143,13 @@ function runCapture(tab) {
 }
 
 function analyzePage(tabId, changeInfo, tabInfo) {
-  //console.log("tabId", tabId);
-  //console.log("ChangeInfo", changeInfo);
-  //console.log("tabInfo", tabInfo);
+  console.log("tabId", tabId);
+  console.log("ChangeInfo", changeInfo);
+  console.log("tabInfo", tabInfo);
+  if (changeInfo.url)
+      analyzeURL(changeInfo.url);
   if (changeInfo.status == 'complete' && changeInfo.url == undefined) {
-    //console.log("Exec analysis...");
+    console.log("Exec vision analysis...");
     runCapture(tabInfo);
   }
 }

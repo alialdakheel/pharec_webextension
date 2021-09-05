@@ -149,7 +149,7 @@ function analyzePage(tabId, changeInfo, tabInfo) {
   console.log("ChangeInfo", changeInfo);
   console.log("tabInfo", tabInfo);
   if (changeInfo.url)
-      analyzeURL(changeInfo.url);
+    analyzeURL(changeInfo.url);
   if (changeInfo.status == 'complete' && changeInfo.url == undefined) {
     console.log("Exec vision analysis...");
     runCapture(tabInfo);

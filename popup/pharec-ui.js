@@ -14,16 +14,17 @@ function listenForBackground(){
         var image_elem = document.getElementById("imgCapture");
         image_elem.src = msg.data.imageURI;
       } else if (msg.type == "Result") {
-        var pred_elem = document.getElementById("pred-output");
-        pred_elem.innerHTML = "Is Phishing? " + msg.data.isPhishv;
+        var vpred_elem = document.getElementById("vpred-output");
+        vpred_elem.innerHTML = "Is Phishing? " + msg.data.isPhishv;
         if (msg.data.isPhishv) {
-          pred_elem.style.color = 'red';
+          vpred_elem.style.color = 'red';
         } else {
-          pred_elem.style.color = 'green';
+          vpred_elem.style.color = 'green';
         }
 
-        var model_elem = document.getElementById("model-output");
-        model_elem.innerHTML = "Probability: " + (msg.data.vmodelOutput * 100).toFixed(2) + " %";
+        var vmodel_elem = document.getElementById("vmodel-output");
+        vmodel_elem.innerHTML = "Probability: " + (msg.data.vmodelOutput * 100).toFixed(2) + " %";
+
       } else {}
     });
 }
@@ -38,7 +39,7 @@ function onCapture(imageUri) {
    */
   var bg = browser.extension.getBackgroundPage();
   bg.analyzeImage(imageUri).then((res) => {
-    var pred_elem = document.getElementById("pred-output");
+    var pred_elem = document.getElementById("vpred-output");
     pred_elem.innerHTML = "Is Phishing? " + res.isPhishv;
     if (res.isPhishv) {
       pred_elem.style.color = 'red';
@@ -46,7 +47,7 @@ function onCapture(imageUri) {
       pred_elem.style.color = 'green';
     }
 
-    var model_elem = document.getElementById("model-output");
+    var model_elem = document.getElementById("vmodel-output");
     model_elem.innerHTML = "Probability: " + (res.vmodelOutput * 100).toFixed(2) + " %";
   });
 }
@@ -136,18 +137,29 @@ function reportExecuteScriptError(error) {
 listenForBackground();
 listenForClicks();
 browser.runtime.sendMessage({type: "getResults"}).then((response) => {
-        var image_elem = document.getElementById("imgCapture");
-        image_elem.src = response.data.imageURI;
+  console.log("Results:", response);
+  var image_elem = document.getElementById("imgCapture");
+  image_elem.src = response.data.imageURI;
 
-        var pred_elem = document.getElementById("pred-output");
-        pred_elem.innerHTML = "Is Phishing? " + response.data.isPhishv;
-        if (response.data.isPhishv) {
-          pred_elem.style.color = 'red';
-        } else {
-          pred_elem.style.color = 'green';
-        }
+  var pred_elem = document.getElementById("vpred-output");
+  pred_elem.innerHTML = "Is Phishing? " + response.data.isPhishv;
+  if (response.data.isPhishv) {
+    pred_elem.style.color = 'red';
+  } else {
+    pred_elem.style.color = 'green';
+  }
 
-        var model_elem = document.getElementById("model-output");
-        model_elem.innerHTML = "Probability: " + (response.data.vmodelOutput * 100).toFixed(2) + " %";
+  var model_elem = document.getElementById("vmodel-output");
+  model_elem.innerHTML = "Probability: " + (response.data.vmodelOutput * 100).toFixed(2) + " %";
+  var pred_elem = document.getElementById("nlppred-output");
+  pred_elem.innerHTML = "Is Phishing? " + response.data.isPhishnlp;
+  if (response.data.isPhishnlp) {
+    pred_elem.style.color = 'red';
+  } else {
+    pred_elem.style.color = 'green';
+  }
+
+  var nlpmodel_elem = document.getElementById("nlpmodel-output");
+  nlpmodel_elem.innerHTML = "Probability: " + (response.data.nlpmodelOutput * 100).toFixed(2) + " %";
 });
   

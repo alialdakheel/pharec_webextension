@@ -11,13 +11,25 @@
       <div id="capturedImg" class="captured-img">
         <img id="imgCapture" src="../icons/pharec-96.png" alt="Captured page">
       </div>
-      <div id="pred" class="pharec-pred">
-        <p id="pred-output" class="p-pharec">
-        Is Phishing? ...
-        </p>
-        <p id="model-output" class="p-pharec">
-        Logit: ...
-        </p>
+      <div id="output-box" class="output">
+        <div id="vpred" class="pharec-pred">
+          <h5 style="color:DarkCyan;" class="h-pharec">Vision</h5>
+          <p id="vpred-output" class="p-pharec">
+          Is Phishing? ...
+          </p>
+          <p id="vmodel-output" class="p-pharec">
+          Probability: ...
+          </p>
+        </div>
+        <div id="nlppred" class="pharec-pred">
+          <h5 style="color:DarkSlateBlue;" class="h-pharec">URL</h5>
+          <p id="nlppred-output" class="p-pharec">
+          Is Phishing? ...
+          </p>
+          <p id="nlpmodel-output" class="p-pharec">
+          Probability: ...
+          </p>
+        </div>
       </div>
       <footer>
       <div class="button runCapture">Capture</div>

@@ -18,7 +18,8 @@
   },
 
   "web_accessible_resources": [
-    "js_model/*"
+    "js_vmodel/*",
+    "js_nlpmodel/*"
   ],
 
   "browser_action": {

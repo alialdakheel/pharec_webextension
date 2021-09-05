@@ -15,15 +15,15 @@ function listenForBackground(){
         image_elem.src = msg.data.imageURI;
       } else if (msg.type == "Result") {
         var pred_elem = document.getElementById("pred-output");
-        pred_elem.innerHTML = "Is Phishing? " + msg.data.isPhish;
-        if (msg.data.isPhish) {
+        pred_elem.innerHTML = "Is Phishing? " + msg.data.isPhishv;
+        if (msg.data.isPhishv) {
           pred_elem.style.color = 'red';
         } else {
           pred_elem.style.color = 'green';
         }
 
         var model_elem = document.getElementById("model-output");
-        model_elem.innerHTML = "Probability: " + (msg.data.modelOutput * 100).toFixed(2) + " %";
+        model_elem.innerHTML = "Probability: " + (msg.data.vmodelOutput * 100).toFixed(2) + " %";
       } else {}
     });
 }
@@ -39,15 +39,15 @@ function onCapture(imageUri) {
   var bg = browser.extension.getBackgroundPage();
   bg.analyzeImage(imageUri).then((res) => {
     var pred_elem = document.getElementById("pred-output");
-    pred_elem.innerHTML = "Is Phishing? " + res.isPhish;
-    if (res.isPhish) {
+    pred_elem.innerHTML = "Is Phishing? " + res.isPhishv;
+    if (res.isPhishv) {
       pred_elem.style.color = 'red';
     } else {
       pred_elem.style.color = 'green';
     }
 
     var model_elem = document.getElementById("model-output");
-    model_elem.innerHTML = "Probability: " + (res.modelOutput * 100).toFixed(2) + " %";
+    model_elem.innerHTML = "Probability: " + (res.vmodelOutput * 100).toFixed(2) + " %";
   });
 }
 
@@ -140,14 +140,14 @@ browser.runtime.sendMessage({type: "getResults"}).then((response) => {
         image_elem.src = response.data.imageURI;
 
         var pred_elem = document.getElementById("pred-output");
-        pred_elem.innerHTML = "Is Phishing? " + response.data.isPhish;
-        if (response.data.isPhish) {
+        pred_elem.innerHTML = "Is Phishing? " + response.data.isPhishv;
+        if (response.data.isPhishv) {
           pred_elem.style.color = 'red';
         } else {
           pred_elem.style.color = 'green';
         }
 
         var model_elem = document.getElementById("model-output");
-        model_elem.innerHTML = "Probability: " + (response.data.modelOutput * 100).toFixed(2) + " %";
+        model_elem.innerHTML = "Probability: " + (response.data.vmodelOutput * 100).toFixed(2) + " %";
 });
   

@@ -23,7 +23,7 @@ function loadImageTensor(imageUri) {
 
 function loadURLTensor(URL) {
   return new Promise((resolve, reject) => {
-    console.log(URL);
+    console.log("URL:", URL);
     var url_split = URL.split('')
     if (url_split[4] == 's')
       var the_s = url_split.splice(4, 1);
@@ -65,6 +65,7 @@ async function runvModel(vmodel, image_tensor) {
 async function runnlpModel(nlpmodel, url_tensor) {
   console.log('url_tensor', url_tensor);
   var expanded_tensor = await tf.expandDims(url_tensor, 0);
+  console.log('expanded_tensor', expanded_tensor);
   var nlpmodel_output = await nlpmodel.predict(expanded_tensor);
 
   return nlpmodel_output;
@@ -87,9 +88,10 @@ function analyzeImage(imageUri) {
             var pred = tf.round(sigmoid_output).arraySync();
             var is_phishing = !Boolean(pred);
 
-            results.isPhish = is_phishing;
+            results.isPhishv = is_phishing;
             results.vmodelOutput = vmodel_output;
-            resolve({isPhish: is_phishing, vmodelOutput: vmodel_output});
+            console.log("vresults:", {isPhish: is_phishing, vmodelOutput: vmodel_output});
+            resolve({isPhishv: is_phishing, vmodelOutput: vmodel_output});
           });
         });
       });
@@ -118,9 +120,9 @@ function analyzeURL(URL) {
             var is_phishing = Boolean(pred);
             console.log("is_phish:", is_phishing);
 
-            results.isPhish = is_phishing;
+            results.isPhishnlp = is_phishing;
             results.nlpmodelOutput = nlpmodel_output;
-            resolve({isPhish: is_phishing, nlpmodelOutput: nlpmodel_output});
+            resolve({isPhishnlp: is_phishing, nlpmodelOutput: nlpmodel_output});
           });
         });
       });

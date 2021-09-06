@@ -19,7 +19,8 @@
 
   "web_accessible_resources": [
     "js_vmodel/*",
-    "js_nlpmodel/*"
+    "js_nlpmodel/*",
+    "icons/*"
   ],
 
   "browser_action": {

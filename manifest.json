@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
-  "name": "Pharec Alpha",
-  "version": "0.1",
+  "name": "PharecWE",
+  "version": "0.1.0-alpha",
 
   "description": "Detect phishing pages.",
   "homepage_url": "https://github.com/alialdakheel/pharec_webextension",
@@ -20,7 +20,8 @@
   "web_accessible_resources": [
     "js_vmodel/*",
     "js_nlpmodel/*",
-    "icons/*"
+    "icons/*",
+    "background/tfjs-v3.9.0.min.js.map"
   ],
 
   "browser_action": {

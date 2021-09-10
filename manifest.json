@@ -1,12 +1,12 @@
 {
   "manifest_version": 2,
   "name": "PharecWE",
-  "version": "0.1.1-alpha",
+  "version": "0.1.1",
 
   "description": "Detect phishing pages.",
   "homepage_url": "https://github.com/alialdakheel/pharec_webextension",
   "permissions": [ "activeTab", "<all_urls>" ],
-  "content_security_policy": "script-src 'self' https://cdn.jsdelivr.net/npm/@tensorflow/tfjs/dist/tf.min.js 'unsafe-eval'; object-src 'self'",
+  "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
 
   "background": {
     "page": "background/background.html"

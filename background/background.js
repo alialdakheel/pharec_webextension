@@ -41,7 +41,8 @@ async function loadvModel() {
   if (vmodel) {
     return Promise.resolve(vmodel);
   } else {
-  var vmodel_url = browser.runtime.getURL("js_vmodel/model.json");
+  //var vmodel_url = browser.runtime.getURL("js_vmodel/model.json");
+  var vmodel_url = "https://pharec-dl.tech/js_vmodel/model.json";
   return tf.loadLayersModel(vmodel_url);
   }
 }
@@ -50,7 +51,8 @@ async function loadnlpModel() {
   if (nlpmodel) {
     return Promise.resolve(nlpmodel);
   } else {
-  var nlpmodel_url = browser.runtime.getURL("js_nlpmodel/model.json");
+  //var nlpmodel_url = browser.runtime.getURL("js_nlpmodel/model.json");
+  var nlpmodel_url = "https://pharec-dl.tech/js_nlpmodel/model.json";
   return tf.loadLayersModel(nlpmodel_url);
   }
 }

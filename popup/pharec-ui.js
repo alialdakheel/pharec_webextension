@@ -1,13 +1,9 @@
 
-/**
- * CSS to hide everything on the page,
- * except for elements that have the "beastify-image" class.
- */
-const hidePage = `body > :not(.h1-pharec) {
-                    display: none;
-                  }`;
+function computeConfidence(modelOutput) {
+  return Math.abs(modelOutput - 0.5) * 2 * 100;
+}
 
-function listenForBackground(){
+function listenForBackground() {
   browser.runtime.onMessage.addListener(
     (msg, sender) => {
       if (msg.type == "imgCapture") {
@@ -23,7 +19,7 @@ function listenForBackground(){
         }
 
         var vmodel_elem = document.getElementById("vmodel-output");
-        vmodel_elem.innerHTML = "Probability: " + (msg.data.vmodelOutput * 100).toFixed(2) + " %";
+        vmodel_elem.innerHTML = "Confidence: " + computeConfidence(msg.data.vmodelOutput).toFixed(2) + " %";
 
       } else {}
     });
@@ -48,7 +44,7 @@ function onCapture(imageUri) {
     }
 
     var model_elem = document.getElementById("vmodel-output");
-    model_elem.innerHTML = "Probability: " + (res.vmodelOutput * 100).toFixed(2) + " %";
+    model_elem.innerHTML = "Confidence: " + computeConfidence(res.vmodelOutput).toFixed(2) + " %";
   });
 }
 
@@ -70,15 +66,6 @@ function listenForClicks() {
 
       var capturing = browser.tabs.captureVisibleTab();
       capturing.then(onCapture, onCaptureError);
-
-      /*
-       *browser.tabs.insertCSS({code: hidePage}).then(() => {
-       *  browser.tabs.sendMessage(tabs[0].id, {
-       *    command: "run",
-       *    //beastURL: url
-       *  });
-       *});
-       */
     }
 
     function reset(tabs) {
@@ -126,18 +113,10 @@ function reportExecuteScriptError(error) {
   console.error(`Failed to execute run content script: ${error.message}`);
 }
 
-/**
- * When the popup loads, inject a content script into the active tab,
- * and add a click handler.
- * If we couldn't inject the script, handle the error.
- */
-//browser.tabs.executeScript({file: "/content_scripts/run_contentscript.js"})
-//.then(listenForClicks)
-//.catch(reportExecuteScriptError);
 listenForBackground();
 listenForClicks();
 browser.runtime.sendMessage({type: "getResults"}).then((response) => {
-  console.log("Results:", response);
+  //console.log("Results:", response);
   var image_elem = document.getElementById("imgCapture");
   image_elem.src = response.data.imageURI;
 
@@ -150,9 +129,9 @@ browser.runtime.sendMessage({type: "getResults"}).then((response) => {
   }
 
   var model_elem = document.getElementById("vmodel-output");
-  model_elem.innerHTML = "Probability: " + (response.data.vmodelOutput * 100).toFixed(2) + " %";
+  model_elem.innerHTML = "Confidence: " + computeConfidence(response.data.vmodelOutput).toFixed(2) + " %";
   var pred_elem = document.getElementById("nlppred-output");
-  pred_elem.innerHTML = "Is Phishing? " + response.data.isPhishnlp;
+  pred_elem.innerHTML = "" + response.data.isPhishnlp;
   if (response.data.isPhishnlp) {
     pred_elem.style.color = 'red';
   } else {
@@ -160,6 +139,6 @@ browser.runtime.sendMessage({type: "getResults"}).then((response) => {
   }
 
   var nlpmodel_elem = document.getElementById("nlpmodel-output");
-  nlpmodel_elem.innerHTML = "Probability: " + (response.data.nlpmodelOutput * 100).toFixed(2) + " %";
+  nlpmodel_elem.innerHTML = "" + computeConfidence(response.data.nlpmodelOutput).toFixed(2) + " %";
 });
   

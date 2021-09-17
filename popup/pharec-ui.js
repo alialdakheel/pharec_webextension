@@ -1,4 +1,6 @@
 
+var bg = browser.extension.getBackgroundPage();
+
 function computeConfidence(modelOutput) {
   return Math.abs(modelOutput - 0.5) * 2 * 100;
 }
@@ -33,7 +35,6 @@ function onCapture(imageUri) {
 	 *  e.target.style.maxHeight = e.target.style.maxHeight === "100%" ? "100vw" : "100%";
    *});
    */
-  var bg = browser.extension.getBackgroundPage();
   bg.analyzeImage(imageUri).then((res) => {
     var pred_elem = document.getElementById("vpred-output");
     pred_elem.innerHTML = "Is Phishing? " + res.isPhishv;
@@ -90,12 +91,14 @@ function listenForClicks() {
      * then call "run()" or "reset()" as appropriate.
      */
     if (e.target.classList.contains("runCapture")) {
+      bg.fetch_ga('runcapture_click');
       browser.tabs.query({active: true, currentWindow: true})
 	.then(runCapture)
         .catch(reportError);
 
     }
-    else if (e.target.classList.contains("reset")) {
+    else if (e.target.classList.contains("incorrectClass")) {
+      bg.fetch_ga('incorrectclass_click');
       browser.tabs.query({active: true, currentWindow: true})
         .then(reset)
         .catch(reportError);
@@ -141,4 +144,6 @@ browser.runtime.sendMessage({type: "getResults"}).then((response) => {
   var nlpmodel_elem = document.getElementById("nlpmodel-output");
   nlpmodel_elem.innerHTML = "" + computeConfidence(response.data.nlpmodelOutput).toFixed(2) + " %";
 });
+
+bg.fetch_ga('popup_click');
   

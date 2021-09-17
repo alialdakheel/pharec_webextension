@@ -20,9 +20,10 @@ html, body {
   text-align: center;
   margin: 3% auto;
   /*font-size: 0.9em;*/
-  padding: 4%;
+  padding-right: 5%;
+  padding-left: 5%;
+  padding-top: 2%;
 }
-
 
 .p-pharec {
   text-align: center;
@@ -49,11 +50,17 @@ body img {
   max-height: 50%;
 }
 
+.pharec-control {
+  text-align: center;
+  /*margin: 3% auto;*/
+  /*font-size: 0.9em;*/
+  padding: 4%;
+}
 
 .button {
   /*margin: 3% auto;*/
-  margin-right: 20%;
-  margin-left: 20%;
+  margin-right: 2%;
+  margin-left: 5%;
   margin-bottom: 2%;
   padding: 12px;
   text-align: center;
@@ -62,23 +69,31 @@ body img {
   border-radius: 3px;
 }
 
-
 .runCapture {
-  color: white;
+  display: inline-block;
+  color: lightgray;
   background-color: #23537E;
+  padding-right: 10%;
+  padding-left: 10%;
+  margin-right: 15%;
+  margin-left: 12%;
 }
 
 .runCapture:hover {
-  color: white;
+  color: lightgray;
   background-color: #333353;
 }
 
-.reset {
-  background-color: #BBCBEE;
+.incorrectClass {
+  display: inline-block;
+  color: lightgray;
+  background-color: crimson;
+  /*font-size: 1.5em;*/
 }
 
-.reset:hover {
-  background-color: #4B5B6E;
+.incorrectClass:hover {
+  background-color: darkred;
+  color: lightgray;
   /*background-color: #AA5A7D;*/
 }
 

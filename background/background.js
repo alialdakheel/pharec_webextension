@@ -2,6 +2,11 @@
  *Consider when to run the script [ tabs.onUpdate, webNavigation.onCompleted, webNavigation.onHistoryStateUpdated]
  */
 
+
+var vmodel_url = browser.runtime.getURL("js_vmodel/model.json");
+
+var nlpmodel_url = browser.runtime.getURL("js_nlpmodel/model.json");
+
 const filter = {
   properties: ["status", "url"]
 }
@@ -9,6 +14,52 @@ var results = {}
 
 var vmodel = loadvModel();
 var nlpmodel = loadnlpModel();
+
+var uuid = get_uuid();
+
+function get_uuid() {
+  return new Promise((resolve, reject) => {
+    if (!uuid) {
+      uuid = browser.storage.local.get('pharecwe_uuid').then((res) => {
+        console.log("retreived uuid: ", res);
+        if (res.pharecwe_uuid) {
+          resolve(res.pharecwe_uuid);
+        } else {
+          console.log("uuid not found, generating..");
+          var puuid = gen_uuid();
+          console.log("generated puuid: ", puuid);
+          browser.storage.local.set({'pharecwe_uuid': puuid});
+          resolve(puuid);
+        }
+      });
+    } else {
+      resolve(uuid);
+    }
+  });
+}
+
+async function fetch_ga(event_st) {
+  const fid = await uuid;
+  fetch(`https://www.google-analytics.com/mp/collect?measurement_id=${ga_mid}&api_secret=${ga_sec}`, {
+  method: "POST",
+  body: JSON.stringify({
+    client_id: fid,
+    user_id: fid,
+    events: [{
+      name: event_st,
+      }]
+    })
+  });
+}
+
+/*
+ *From: https://stackoverflow.com/questions/105034/how-to-create-a-guid-uuid
+ */
+function gen_uuid() {
+  return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+    (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+  );
+}
 
 function loadImageTensor(imageUri) {
   return new Promise((resolve, reject) => {
@@ -30,10 +81,7 @@ function loadURLTensor(URL) {
     var unicode_url =  url_split.map(c => c.charCodeAt());
     resolve(unicode_url);
   });
-}
-
-function rescale(image_tensor) {
-	return image_tensor.toFloat().div(tf.scalar(255));
+} function rescale(image_tensor) { return image_tensor.toFloat().div(tf.scalar(255));
 }
 
 async function loadvModel() {
@@ -41,7 +89,6 @@ async function loadvModel() {
     //return Promise.resolve(vmodel);
     return vmodel;
   } else {
-    var vmodel_url = browser.runtime.getURL("js_vmodel/model.json");
     var model = await tf.loadLayersModel(vmodel_url);
     console.log("finished loading vmodel");
     //return Promise.resolve(model);
@@ -53,7 +100,6 @@ async function loadnlpModel() {
   if (nlpmodel) {
     return Promise.resolve(nlpmodel);
   } else {
-    var nlpmodel_url = browser.runtime.getURL("js_nlpmodel/model.json");
     var model = await tf.loadLayersModel(nlpmodel_url);
     console.log("finished loading nlpmodel");
     return Promise.resolve(model);
@@ -121,7 +167,6 @@ function analyzeURL(URL) {
             var nlpmodel_output = sigmoid_output.arraySync();
             var pred = tf.round(sigmoid_output).arraySync();
             var is_phishing = Boolean(pred);
-            console.log("is_phish:", is_phishing);
 
             results.isPhishnlp = is_phishing;
             results.nlpmodelOutput = nlpmodel_output;
@@ -173,4 +218,5 @@ function listenForRequest() {
 }
 
 browser.tabs.onUpdated.addListener(analyzePage, filter);
+fetch_ga('bg_run');
 listenForRequest();

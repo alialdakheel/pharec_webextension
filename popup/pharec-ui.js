@@ -1,51 +1,48 @@
-
 var bg = browser.extension.getBackgroundPage();
 
 function computeConfidence(modelOutput) {
   return Math.abs(modelOutput - 0.5) * 2 * 100;
 }
 
+function update_capture_output(imgURI){
+  var image_elem = document.getElementById("imgCapture");
+  image_elem.src = imgURI;
+}
+
+function update_pred_output(results){
+  var pred_elem = document.getElementById("vpred-output");
+  pred_elem.innerHTML = "Is Phishing? " + results.isPhishv;
+  if (results.isPhishv) {
+    pred_elem.style.color = 'red';
+  } else {
+    pred_elem.style.color = 'green';
+  }
+
+  var model_elem = document.getElementById("vmodel-output");
+  model_elem.innerHTML = "Confidence: " + computeConfidence(results.vmodelOutput).toFixed(2) + " %";
+
+}
+
 function listenForBackground() {
   browser.runtime.onMessage.addListener(
     (msg, sender) => {
       if (msg.type == "imgCapture") {
-        var image_elem = document.getElementById("imgCapture");
-        image_elem.src = msg.data.imageURI;
+        update_capture_output(msg.data.imageURI);
       } else if (msg.type == "Result") {
-        var vpred_elem = document.getElementById("vpred-output");
-        vpred_elem.innerHTML = "Is Phishing? " + msg.data.isPhishv;
-        if (msg.data.isPhishv) {
-          vpred_elem.style.color = 'red';
-        } else {
-          vpred_elem.style.color = 'green';
-        }
-
-        var vmodel_elem = document.getElementById("vmodel-output");
-        vmodel_elem.innerHTML = "Confidence: " + computeConfidence(msg.data.vmodelOutput).toFixed(2) + " %";
-
+        update_pred_output(msg.data);
       } else {}
     });
 }
 
 function onCapture(imageUri) {
-  var image_elem = document.getElementById("imgCapture");
-  image_elem.src = imageUri;
+  update_capture_output(imageUri);
   /*
    *image_elem.addEventListener("click", (e) => {
 	 *  e.target.style.maxHeight = e.target.style.maxHeight === "100%" ? "100vw" : "100%";
    *});
    */
   bg.analyzeImage(imageUri).then((res) => {
-    var pred_elem = document.getElementById("vpred-output");
-    pred_elem.innerHTML = "Is Phishing? " + res.isPhishv;
-    if (res.isPhishv) {
-      pred_elem.style.color = 'red';
-    } else {
-      pred_elem.style.color = 'green';
-    }
-
-    var model_elem = document.getElementById("vmodel-output");
-    model_elem.innerHTML = "Confidence: " + computeConfidence(res.vmodelOutput).toFixed(2) + " %";
+    update_pred_output(res);
   });
 }
 
@@ -80,7 +77,7 @@ function listenForClicks() {
     }
 
     /**
-     * Just log the error to the console.
+     * Log the error to the console.
      */
     function reportError(error) {
       console.error(`Could not run: ${error}`);
@@ -93,9 +90,8 @@ function listenForClicks() {
     if (e.target.classList.contains("runCapture")) {
       bg.fetch_ga('runcapture_click');
       browser.tabs.query({active: true, currentWindow: true})
-	.then(runCapture)
+        .then(runCapture)
         .catch(reportError);
-
     }
     else if (e.target.classList.contains("incorrectClass")) {
       bg.fetch_ga('incorrectclass_click');
@@ -120,30 +116,8 @@ listenForBackground();
 listenForClicks();
 browser.runtime.sendMessage({type: "getResults"}).then((response) => {
   //console.log("Results:", response);
-  var image_elem = document.getElementById("imgCapture");
-  image_elem.src = response.data.imageURI;
-
-  var pred_elem = document.getElementById("vpred-output");
-  pred_elem.innerHTML = "Is Phishing? " + response.data.isPhishv;
-  if (response.data.isPhishv) {
-    pred_elem.style.color = 'red';
-  } else {
-    pred_elem.style.color = 'green';
-  }
-
-  var model_elem = document.getElementById("vmodel-output");
-  model_elem.innerHTML = "Confidence: " + computeConfidence(response.data.vmodelOutput).toFixed(2) + " %";
-  var pred_elem = document.getElementById("nlppred-output");
-  pred_elem.innerHTML = "" + response.data.isPhishnlp;
-  if (response.data.isPhishnlp) {
-    pred_elem.style.color = 'red';
-  } else {
-    pred_elem.style.color = 'green';
-  }
-
-  var nlpmodel_elem = document.getElementById("nlpmodel-output");
-  nlpmodel_elem.innerHTML = "" + computeConfidence(response.data.nlpmodelOutput).toFixed(2) + " %";
+  update_capture_output(response.data.imageURI);
+  update_pred_output(response.data);
 });
 
 bg.fetch_ga('popup_click');
-  

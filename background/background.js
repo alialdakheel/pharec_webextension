@@ -2,10 +2,7 @@
  *Consider when to run the script [ tabs.onUpdate, webNavigation.onCompleted, webNavigation.onHistoryStateUpdated]
  */
 
-
 var vmodel_url = browser.runtime.getURL("js_vmodel/model.json");
-
-var nlpmodel_url = browser.runtime.getURL("js_nlpmodel/model.json");
 
 const filter = {
   properties: ["status", "url"]
@@ -13,7 +10,7 @@ const filter = {
 var results = {}
 
 var vmodel = loadvModel();
-var nlpmodel = loadnlpModel();
+//var nlpmodel = loadnlpModel();
 
 var uuid = get_uuid();
 
@@ -81,7 +78,10 @@ function loadURLTensor(URL) {
     var unicode_url =  url_split.map(c => c.charCodeAt());
     resolve(unicode_url);
   });
-} function rescale(image_tensor) { return image_tensor.toFloat().div(tf.scalar(255));
+} 
+
+function rescale(image_tensor) {
+  return image_tensor.toFloat().div(tf.scalar(255));
 }
 
 async function loadvModel() {
@@ -196,8 +196,9 @@ function analyzePage(tabId, changeInfo, tabInfo) {
   //console.log("tabId", tabId);
   //console.log("ChangeInfo", changeInfo);
   //console.log("tabInfo", tabInfo);
-  if (changeInfo.url)
-    analyzeURL(changeInfo.url);
+  //
+  //if (changeInfo.url)
+    //analyzeURL(changeInfo.url);
   if (changeInfo.status == 'complete' && changeInfo.url == undefined) {
     console.log("Exec vision analysis...");
     runCapture(tabInfo);

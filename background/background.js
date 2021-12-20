@@ -2,14 +2,15 @@
  *Consider when to run the script [ tabs.onUpdate, webNavigation.onCompleted, webNavigation.onHistoryStateUpdated]
  */
 
-var vmodel_url = browser.runtime.getURL("js_vmodel/model.json");
+var wpd_model_url = browser.runtime.getURL("js_wpd_model/model.json");
 
 const filter = {
   properties: ["status", "url"]
 }
 var results = {}
 
-var vmodel = loadvModel();
+var wpd_model = loadWPDModel();
+//var vmodel = loadvModel();
 //var nlpmodel = loadnlpModel();
 
 var uuid = get_uuid();
@@ -86,16 +87,23 @@ function rescale(image_tensor) {
 
 async function loadvModel() {
   if (vmodel) {
-    //return Promise.resolve(vmodel);
     return vmodel;
   } else {
     var model = await tf.loadLayersModel(vmodel_url);
     console.log("finished loading vmodel");
-    //return Promise.resolve(model);
     return model;
   }
 }
 
+async function loadWPDModel() {
+  if (wpd_model) {
+    return wpd_model;
+  } else {
+    var model = await tf.loadLayersModel(wpd_model_url);
+    console.log("finished loading WPD model");
+    return model;
+  }
+}
 async function loadnlpModel() {
   if (nlpmodel) {
     return Promise.resolve(nlpmodel);
@@ -118,6 +126,23 @@ async function runvModel(image_tensor) {
   });
 
   return vmodel_output;
+}
+
+async function runWPDModel(image_tensor) {
+  if (!wpd_model) {
+    console.log("WPD Model not loaded yet. waiting...");
+    setTimeout(() => {runWPDModel(image_tensor);}, 3000);
+    return;
+  }
+  var expanded_tensor = await tf.expandDims(image_tensor, 0);
+  var wpd_model_output = await wpd_model.then((m) => {
+    return m.predict(expanded_tensor);
+  });
+  var softmax_output = await tf.softmax(wpd_model_output);
+  //console.log(softmax_output);
+  //softmax_output.print();
+
+  return softmax_output;
 }
 
 async function runnlpModel(url_tensor) {
@@ -148,7 +173,42 @@ function analyzeImage(imageUri) {
 
             results.isPhishv = is_phishing;
             results.vmodelOutput = vmodel_output;
+            console.log("vModel resutls:", 
+              {isPhishv: is_phishing, vmodelOutput: vmodel_output});
             resolve({isPhishv: is_phishing, vmodelOutput: vmodel_output});
+          });
+        });
+      });
+    });
+  });
+}
+
+function analyzeImage_WPD(imageUri) {
+  return new Promise((resolve, reject) => {
+    tf.ready().then(() => {
+      tf.tidy(() => {
+        loadImageTensor(imageUri).then((image_tensor) => {
+          runWPDModel(rescale(image_tensor)).then(output => {
+            var probits = tf.squeeze(output, 0);
+            var pred_index = probits.argMax().arraySync();
+            var probits_array = probits.arraySync();
+            console.log("WPD top pred index:", pred_index);
+            console.log("Top probit", probits_array[pred_index]);
+            var top5 = probits.topk(5);
+            console.log("Top 5 ind:", top5.indices.arraySync());
+            console.log("Top 5 val:", top5.values.arraySync());
+            results.topPred = pred_index;
+            results.topProbit = probits_array[pred_index];
+
+            resolve({topPred: pred_index, topProbit: probits_array[pred_index]});
+            //var sigmoid_output = tf.sigmoid(logit);
+            //var vmodel_output = sigmoid_output.arraySync();
+            //var pred = tf.round(sigmoid_output).arraySync();
+            //var is_phishing = !Boolean(pred);
+
+            //results.isPhishv = is_phishing;
+            //results.vmodelOutput = vmodel_output;
+            //resolve({isPhishv: is_phishing, vmodelOutput: vmodel_output});
           });
         });
       });
@@ -180,7 +240,8 @@ function analyzeURL(URL) {
 
 function onCapture(imageUri) {
   results.imageURI = imageUri;
-  analyzeImage(imageUri);
+  //analyzeImage(imageUri);
+  analyzeImage_WPD(imageUri);
 }
 
 function onCaptureError(error) {

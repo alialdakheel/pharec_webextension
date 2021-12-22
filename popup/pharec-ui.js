@@ -9,6 +9,8 @@ function computeConfidence(modelOutput) {
 function update_capture_output(imgURI){
   var image_elem = document.getElementById("imgCapture");
   image_elem.src = imgURI;
+  image_elem.setAttribute("width", 512);
+  image_elem.setAttribute("height", 256);
 }
 
 function update_pred_output(results){

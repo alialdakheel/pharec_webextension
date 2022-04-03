@@ -2,7 +2,7 @@
  *Consider when to run the script [ tabs.onUpdate, webNavigation.onCompleted, webNavigation.onHistoryStateUpdated]
  */
 
-var wpd_model_url = browser.runtime.getURL("js_wpd_model/model.json");
+var wpd_model_url = browser.runtime.getURL("js_wpd2_model/model.json");
 
 const filter = {
   properties: ["status", "url"]
@@ -14,6 +14,8 @@ var wpd_model = loadWPDModel();
 //var nlpmodel = loadnlpModel();
 
 var uuid = get_uuid();
+
+const size_CSS = { code: "html {height: 256px !important; width: 512px !important; overflow: clip !important;}"}
 
 function get_uuid() {
   return new Promise((resolve, reject) => {
@@ -241,28 +243,39 @@ function analyzeURL(URL) {
 function onCapture(imageUri) {
   results.imageURI = imageUri;
   //analyzeImage(imageUri);
-  analyzeImage_WPD(imageUri);
+  return analyzeImage_WPD(imageUri);
 }
 
 function onCaptureError(error) {
   console.log(`Error: ${error}`);
 }
 
-function runCapture(tab) {
+function runCapture(tabInfo) {
   var capturing = browser.tabs.captureVisibleTab();
-  capturing.then(onCapture, onCaptureError);
+  return capturing.then(onCapture, onCaptureError);
 }
 
 function analyzePage(tabId, changeInfo, tabInfo) {
-  //console.log("tabId", tabId);
-  //console.log("ChangeInfo", changeInfo);
-  //console.log("tabInfo", tabInfo);
+  console.log("tabId", tabId);
+  console.log("ChangeInfo", changeInfo);
+  console.log("tabInfo", tabInfo);
   //
   //if (changeInfo.url)
     //analyzeURL(changeInfo.url);
   if (changeInfo.status == 'complete' && changeInfo.url == undefined) {
     console.log("Exec vision analysis...");
-    runCapture(tabInfo);
+    // change page size (inject css in page)
+    browser.tabs.insertCSS(
+	    tabId,
+	    size_CSS
+    ).then(() => {
+      runCapture(tabInfo).then(res => {
+        browser.tabs.removeCSS(
+                tabId,
+                size_CSS
+        ).then(null);
+      }).catch(e => {console.log("capture failed: ", e)});
+    }).catch(e => {console.log("inserting css failed: ", e)});
   }
 }
 
@@ -280,5 +293,5 @@ function listenForRequest() {
 }
 
 browser.tabs.onUpdated.addListener(analyzePage, filter);
-fetch_ga('bg_run');
+//fetch_ga('bg_run');
 listenForRequest();

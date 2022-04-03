@@ -7,7 +7,12 @@ var wpd_model_url = browser.runtime.getURL("js_wpd2_model/model.json");
 const filter = {
   properties: ["status", "url"]
 }
+
+const imageWidth = 512;
+const imageHeight = 256;
+
 var results = {}
+
 
 var wpd_model = loadWPDModel();
 //var vmodel = loadvModel();
@@ -15,7 +20,9 @@ var wpd_model = loadWPDModel();
 
 var uuid = get_uuid();
 
-const size_CSS = { code: "html {height: 256px !important; width: 512px !important; overflow: clip !important;}"}
+const size_CSS = { 
+	code: `html {height: ${imageHeight}px !important; width: ${imageWidth}px !important; overflow: clip !important;}`
+}
 
 function get_uuid() {
   return new Promise((resolve, reject) => {
@@ -61,13 +68,26 @@ function gen_uuid() {
   );
 }
 
+function imageCrop(imgElem) {
+  var canvas = document.createElement('canvas');
+  canvas.width = imageWidth;
+  canvas.height = imageHeight;
+  var ctx = canvas.getContext('2d');
+  ctx.drawImage(imgElem, 0, 0, imageWidth, imageHeight,
+	  0, 0, imageWidth, imageHeight);
+  results.imageURI = canvas.toDataURL();
+  return ctx.getImageData(0, 0, imageWidth, imageHeight);
+}
+
 function loadImageTensor(imageUri) {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.src = imageUri;
-    img.setAttribute("width", 512);
-    img.setAttribute("height", 256);
-    img.onload = () => resolve(tf.browser.fromPixels(img));
+    img.setAttribute("width", imageWidth);
+    img.setAttribute("height", imageHeight);
+    img.onload = () => {
+      resolve(tf.browser.fromPixels(imageCrop(img)));
+    }
     img.onerror = (err) => reject(err);
   });
 }
